@@ -53,7 +53,6 @@ func Register(c *fiber.Ctx) error {
 		Role:     req.Role,
 	}
 
-	// validasi role sesuai check constraint
 	role := strings.ToLower(user.Role)
 	switch role {
 	case "manager", "cashier":
@@ -118,7 +117,7 @@ func Login(c *fiber.Ctx) error {
 		Name:     "access_token",
 		Value:    accessToken,
 		HTTPOnly: true,
-		Secure:   false, // ubah ke true saat production
+		Secure:   true, 
 		SameSite: "None",
 		Path:     "/",
 		Expires:  time.Now().Add(35 * time.Minute),
@@ -129,7 +128,7 @@ func Login(c *fiber.Ctx) error {
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		HTTPOnly: true,
-		Secure:   false, 
+		Secure:   true, 
 		SameSite: "None",
 		Path:     "/",
 		Expires:  time.Now().Add(7 * 24 * time.Hour),
@@ -173,7 +172,7 @@ func RefreshToken(c *fiber.Ctx) error {
         Name:     "access_token",
         Value:    newAccessToken,
         HTTPOnly: true,
-        Secure:   false,
+        Secure:   true,
         SameSite: "None",
         Path:     "/",
         Expires:  time.Now().Add(15 * time.Minute),
@@ -192,7 +191,7 @@ func Logout(c *fiber.Ctx) error {
         Value:    "",
         Expires:  time.Now().Add(-time.Hour),
         HTTPOnly: true,
-        Secure:   false,
+        Secure:   true,
         SameSite: "None",
         Path:     "/",
     })
@@ -202,7 +201,7 @@ func Logout(c *fiber.Ctx) error {
         Value:    "",
         Expires:  time.Now().Add(-time.Hour),
         HTTPOnly: true,
-        Secure:   false,
+        Secure:   true,
         SameSite: "None",
         Path:     "/",
     })
