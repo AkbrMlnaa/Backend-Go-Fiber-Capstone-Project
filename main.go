@@ -6,7 +6,6 @@ import (
 	"os"
 	"server/database"
 	"server/routes"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -14,12 +13,17 @@ import (
 func main() {
 
 	database.ConnectDB()
-	database.Migrate()
+	// database.Migrate()
 
 	app := fiber.New()
 
+	frontendURL := os.Getenv("FRONTEND_URL") 
+    if frontendURL == "" {
+        frontendURL = "http://localhost:5173"
+    }
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
+		AllowOrigins:     frontendURL,
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Content-Type, Authorization, Accept, Origin, Cookie",
 		AllowCredentials: true,
@@ -31,7 +35,7 @@ func main() {
 		port = "3030"
 	}
 
-	log.Fatal(app.Listen(":" + port))
 	fmt.Println("Server running on port", port)
+	log.Fatal(app.Listen(":" + port))
 
 }
