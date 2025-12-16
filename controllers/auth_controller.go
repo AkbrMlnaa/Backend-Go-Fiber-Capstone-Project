@@ -92,39 +92,22 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "input tidak valid"})
 	}
 
-	// 1. CEK APA YANG DIKIRIM POSTMAN (Log ke Terminal)
-	fmt.Printf("\n--- 📥 LOGIN REQUEST ---\n")
-	fmt.Printf("Raw Email dari Postman: '%s'\n", req.Email)
-
-	// Bersihkan input
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 	fmt.Printf("Email setelah dibersihkan: '%s'\n", req.Email)
 
 	var user models.User
 	
-	// 2. QUERY SIMPEL (Kita ganti strateginya)
-	// Karena data di DB sudah pasti lowercase (kita lihat tadi di main.go),
-	// kita tidak perlu pakai LOWER() di SQL. Langsung exact match saja biar driver tidak bingung.
 	err := database.DB.Where("email = ?", req.Email).First(&user).Error
 	
 	if err != nil {
-		// LOG ERROR KE TERMINAL
-		fmt.Printf("❌ Query Gagal! Error: %v\n", err)
-		fmt.Printf("------------------------\n\n")
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "email tidak ditemukan", "detail": err.Error()})
 	}
 
-	// LOG SUKSES
-	fmt.Printf("✅ User Ditemukan: ID=%d, Role=%s, Hash=%s\n", user.ID, user.Role, user.Password)
 
-	// 3. Cek Password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		fmt.Printf("❌ Password Salah!\n")
-		fmt.Printf("------------------------\n\n")
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "password salah"})
 	}
 
-	// Generate token access token
 	accessToken, err := utils.GenerateJWT(user.ID, user.Email, user.Role, 15*time.Minute)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "gagal membuat access token"})
@@ -140,8 +123,8 @@ func Login(c *fiber.Ctx) error {
 		Name:     "access_token",
 		Value:    accessToken,
 		HTTPOnly: true,
-		Secure:   true, // Tetap false untuk localhost
-		SameSite: "Lax",
+		Secure:   true, 
+		SameSite: "None",
 		Path:     "/",
 		Expires:  time.Now().Add(35 * time.Minute),
 	})
@@ -151,13 +134,11 @@ func Login(c *fiber.Ctx) error {
 		Value:    refreshToken,
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: "Lax",
+		SameSite: "None",
 		Path:     "/",
 		Expires:  time.Now().Add(1 * 24 * time.Hour),
 	})
 
-	fmt.Printf("✅ Login Berhasil!\n")
-	fmt.Printf("------------------------\n\n")
 
 	return c.JSON(fiber.Map{
 		"status":  "success",
@@ -198,7 +179,7 @@ func RefreshToken(c *fiber.Ctx) error {
         Value:    newAccessToken,
         HTTPOnly: true,
         Secure:   true,
-        SameSite: "Lax",
+        SameSite: "None",
         Path:     "/",
         Expires:  time.Now().Add(15 * time.Minute),
     })
@@ -217,7 +198,7 @@ func Logout(c *fiber.Ctx) error {
         Expires:  time.Now().Add(-time.Hour),
         HTTPOnly: true,
         Secure:   true,
-        SameSite: "Lax",
+        SameSite: "None",
         Path:     "/",
     })
 
@@ -227,7 +208,7 @@ func Logout(c *fiber.Ctx) error {
         Expires:  time.Now().Add(-time.Hour),
         HTTPOnly: true,
         Secure:   true,
-        SameSite: "Lax",
+        SameSite: "None",
         Path:     "/",
     })
 
